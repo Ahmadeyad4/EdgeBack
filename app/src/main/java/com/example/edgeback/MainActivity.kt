@@ -46,7 +46,7 @@ class MainActivity : Activity() {
         bar = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply { max = 100 }
         val row = LinearLayout(this).apply { gravity = Gravity.CENTER }
         mainBtn = Button(this).apply { setOnClickListener { onMain() } }
-        stopBtn = Button(this).apply { text = "إيقاف"; setOnClickListener { onStop() } }
+        stopBtn = Button(this).apply { text = "إيقاف"; setOnClickListener { onStopClick() } }
         row.addView(mainBtn); row.addView(stopBtn)
         panel.addView(updTitle); panel.addView(bar); panel.addView(row)
         root.addView(panel)
@@ -91,7 +91,7 @@ class MainActivity : Activity() {
         render()
     }
 
-    private fun onStop() {
+    private fun onStopClick() {
         dl?.cancel(); dl = null
         apk.delete(); bar.progress = 0; state = S.IDLE; render()
     }
@@ -106,7 +106,7 @@ class MainActivity : Activity() {
     }
 
     private fun install() {
-        if (!packageManager.canRequestPackageInstalls()) {
+        if (android.os.Build.VERSION.SDK_INT >= 26 && !packageManager.canRequestPackageInstalls()) {
             startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName")))
             Toast.makeText(this, "فعّل السماح بالتثبيت ثم اضغط تحميل مرة ثانية", Toast.LENGTH_LONG).show()
             return
