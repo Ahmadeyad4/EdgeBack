@@ -55,7 +55,7 @@ class EdgeService : AccessibilityService() {
         val h = (screenH * Cfg.int(this, "height", 60) / 100f).toInt().coerceAtLeast((40 * dp).toInt())
         val centerY = screenH * Cfg.int(this, "pos", 50) / 100f
         val top = (centerY - h / 2f).toInt().coerceIn(0, maxOf(0, screenH - h))
-        val threshold = 60 * dp
+        val threshold = Cfg.int(this, "dist", 60) * dp
 
         // التأثير الشفاف أثناء السحب
         var fx: View? = null
@@ -111,7 +111,7 @@ class EdgeService : AccessibilityService() {
                 MotionEvent.ACTION_DOWN -> startX = e.rawX
                 MotionEvent.ACTION_MOVE -> {
                     val d = inward(e.rawX)
-                    if (d > 6 * dp) showFx((d / threshold).coerceIn(0f, 1f), e.rawY) else hideFx()
+                    if (d > minOf(6 * dp, threshold / 3)) showFx((d / threshold).coerceIn(0f, 1f), e.rawY) else hideFx()
                 }
                 MotionEvent.ACTION_UP -> {
                     if (inward(e.rawX) > threshold) performGlobalAction(GLOBAL_ACTION_BACK)

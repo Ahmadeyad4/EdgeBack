@@ -127,6 +127,7 @@ class MainActivity : Activity() {
         box.addView(sw("تفعيل الحافة اليسار", "left", true))
         previewSw = sw("إظهار مكان السحب بلون (معاينة)", "preview", false)
         box.addView(previewSw)
+        box.addView(seek("مسافة السحب المطلوبة (أقل = أسرع وأحسّ)", "dist", 10, 120, 60, "dp"))
         box.addView(seek("عرض المنطقة", "width", 10, 80, 20, "dp"))
         box.addView(seek("ارتفاع المنطقة", "height", 10, 100, 60, "%"))
         box.addView(seek("مكان المنطقة (من الأعلى للأسفل)", "pos", 0, 100, 50, "%"))
