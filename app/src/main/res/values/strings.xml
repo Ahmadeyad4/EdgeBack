@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Edge Back</string>
+    <string name="svc_desc">يسمح بالرجوع عند السحب من حافة الشاشة</string>
+</resources>
