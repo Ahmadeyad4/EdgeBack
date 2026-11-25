@@ -17,6 +17,7 @@ class MainActivity : Activity() {
     private var info: Updater.Info? = null
     private var dl: Downloader? = null
     private lateinit var apk: File
+    private var pad = 0
 
     private lateinit var status: TextView
     private lateinit var panel: LinearLayout
@@ -24,13 +25,15 @@ class MainActivity : Activity() {
     private lateinit var bar: ProgressBar
     private lateinit var mainBtn: Button
     private lateinit var stopBtn: Button
+    private lateinit var previewSw: Switch
 
     override fun onCreate(b: Bundle?) {
         super.onCreate(b)
         apk = File(filesDir, "update.apk")
-        val pad = (20 * resources.displayMetrics.density).toInt()
+        pad = (20 * resources.displayMetrics.density).toInt()
         val root = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL; setPadding(pad, pad * 2, pad, pad)
+            orientation = LinearLayout.VERTICAL
+            setPadding(pad, pad * 2, pad, pad)
             layoutDirection = View.LAYOUT_DIRECTION_RTL
         }
         root.addView(TextView(this).apply { text = "Edge Back"; textSize = 26f })
@@ -41,7 +44,13 @@ class MainActivity : Activity() {
             setOnClickListener { startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }
         })
 
-        panel = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; visibility = View.GONE; setPadding(0, pad, 0, 0) }
+        root.addView(settingsBox())
+
+        panel = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            visibility = View.GONE
+            setPadding(0, pad, 0, 0)
+        }
         updTitle = TextView(this).apply { textSize = 16f }
         bar = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply { max = 100 }
         val row = LinearLayout(this).apply { gravity = Gravity.CENTER }
@@ -67,6 +76,68 @@ class MainActivity : Activity() {
         }.start()
     }
 
+    // ---------- الإعدادات ----------
+    private fun sw(label: String, key: String, def: Boolean): Switch {
+        val s = Switch(this)
+        s.text = label
+        s.isChecked = Cfg.bool(this, key, def)
+        s.setPadding(0, pad / 2, 0, pad / 2)
+        s.setOnCheckedChangeListener { _, c -> Cfg.putBool(this, key, c) }
+        return s
+    }
+
+    private fun seek(label: String, key: String, lo: Int, hi: Int, def: Int, unit: String): LinearLayout {
+        val box = LinearLayout(this)
+        box.orientation = LinearLayout.VERTICAL
+        box.setPadding(0, pad / 2, 0, 0)
+        val cur = Cfg.int(this, key, def)
+        val t = TextView(this)
+        t.text = "$label: $cur$unit"
+        val sb = SeekBar(this)
+        sb.max = hi - lo
+        sb.progress = cur - lo
+        sb.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(s: SeekBar?, p: Int, fromUser: Boolean) {
+                val v = p + lo
+                t.text = "$label: $v$unit"
+                if (fromUser) {
+                    Cfg.putInt(this@MainActivity, key, v)
+                    previewSw.isChecked = true   // نعرض المكان بلون أثناء التعديل
+                }
+            }
+            override fun onStartTrackingTouch(s: SeekBar?) {}
+            override fun onStopTrackingTouch(s: SeekBar?) {}
+        })
+        box.addView(t)
+        box.addView(sb, LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
+        return box
+    }
+
+    private fun settingsBox(): LinearLayout {
+        val box = LinearLayout(this)
+        box.orientation = LinearLayout.VERTICAL
+        box.setPadding(0, pad, 0, 0)
+        val title = TextView(this)
+        title.text = "الإعدادات"
+        title.textSize = 20f
+        box.addView(title)
+        box.addView(sw("إظهار تأثير السحب", "effect", true))
+        box.addView(sw("تفعيل الحافة اليمين", "right", true))
+        box.addView(sw("تفعيل الحافة اليسار", "left", true))
+        previewSw = sw("إظهار مكان السحب بلون (معاينة)", "preview", false)
+        box.addView(previewSw)
+        box.addView(seek("عرض المنطقة", "width", 10, 80, 20, "dp"))
+        box.addView(seek("ارتفاع المنطقة", "height", 10, 100, 60, "%"))
+        box.addView(seek("مكان المنطقة (من الأعلى للأسفل)", "pos", 0, 100, 50, "%"))
+        val reset = Button(this)
+        reset.text = "إعادة الضبط الافتراضي"
+        reset.setOnClickListener { Cfg.reset(this); recreate() }
+        box.addView(reset)
+        return box
+    }
+
+    // ---------- الحالة والتحديث ----------
     override fun onResume() {
         super.onResume()
         val on = Settings.Secure.getString(contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES)
