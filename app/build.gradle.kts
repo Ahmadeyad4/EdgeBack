@@ -12,7 +12,7 @@ android {
         targetSdk = 34
         versionCode = (findProperty("verCode") as String?)?.toInt() ?: 1
         versionName = (findProperty("verName") as String?) ?: "1.0.0"
-        buildConfigField("String", "REPO", "\"Ahmadeyad4/EdgeBack\"") <-- غيّرها: اسمك/اسم المستودع
+        buildConfigField("String", "REPO", "\"Ahmadeyad4/EdgeBack\"")
     }
     buildFeatures { buildConfig = true }
     signingConfigs {
